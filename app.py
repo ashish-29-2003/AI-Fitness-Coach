@@ -1,38 +1,66 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for
+import cv2
+import mediapipe as mp
+from flask import Flask, request, render_template
 
 app = Flask(__name__)
-
-# Make sure uploads folder exists
 UPLOAD_FOLDER = "uploads"
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
-
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-ALLOWED_EXTENSIONS = {"mp4", "avi", "mov", "mkv"}  # Allowed video formats
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-def allowed_file(filename):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+# Mediapipe setup
+mp_pose = mp.solutions.pose
 
 @app.route("/")
 def index():
     return render_template("index.html")
 
 @app.route("/upload", methods=["POST"])
-def upload_video():
+def upload():
     if "video" not in request.files:
-        return "No file part", 400
+        return "No file uploaded"
 
     file = request.files["video"]
     if file.filename == "":
-        return "No selected file", 400
+        return "No selected file"
 
-    if file and allowed_file(file.filename):
-        filepath = os.path.join(app.config["UPLOAD_FOLDER"], file.filename)
-        file.save(filepath)
-        return f"✅ Video uploaded successfully! Saved at {filepath}"
+    filepath = os.path.join(app.config["UPLOAD_FOLDER"], file.filename)
+    file.save(filepath)
 
-    return "File type not allowed", 400
+    # Open video with OpenCV
+    cap = cv2.VideoCapture(filepath)
+    if not cap.isOpened():
+        return "Could not process video"
+
+    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    detected_frames = 0
+
+    with mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5) as pose:
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+
+            # Convert BGR (OpenCV) → RGB (Mediapipe)
+            rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+            results = pose.process(rgb)
+
+            if results.pose_landmarks:
+                detected_frames += 1  # Count frames with a person detected
+
+    cap.release()
+
+    accuracy = (detected_frames / frame_count) * 100 if frame_count > 0 else 0
+
+    return render_template(
+        "result.html",
+        frame_count=frame_count,
+        fps=fps,
+        detected_frames=detected_frames,
+        accuracy=accuracy
+    )
 
 if __name__ == "__main__":
     app.run(debug=True)

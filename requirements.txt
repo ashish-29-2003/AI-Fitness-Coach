@@ -6,3 +6,5 @@ SQLAlchemy==2.0.42
 numpy
 opencv-python
 requests
+mediapipe
+pipreqs . --force
