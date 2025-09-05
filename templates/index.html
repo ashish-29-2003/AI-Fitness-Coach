@@ -3,14 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Fitness Coach</title>
+    <title>Workout Analysis Result</title>
 </head>
 <body>
-    <h1>Hello AI Fitness Coach 👋</h1>
+    <h1>Workout Analysis Result</h1>
 
-    <form action="/upload" method="post" enctype="multipart/form-data">
-        <input type="file" name="video" accept="video/*" required>
-        <button type="submit">Analyze Workout</button>
-    </form>
+    <p><b>Total Frames:</b> {{ frame_count }}</p>
+    <p><b>FPS:</b> {{ fps }}</p>
+    <p><b>Person Detected in Frames:</b> {{ detected_frames }}</p>
+    <p><b>Detection Accuracy:</b> {{ accuracy }}%</p>
+
+    <a href="/">Go Back</a>
 </body>
 </html>

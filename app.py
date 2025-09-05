@@ -1,14 +1,13 @@
+from flask import Flask, request, render_template
 import os
 import cv2
 import mediapipe as mp
-from flask import Flask, request, render_template
 
 app = Flask(__name__)
 UPLOAD_FOLDER = "uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Mediapipe setup
 mp_pose = mp.solutions.pose
 
 @app.route("/")
@@ -27,7 +26,6 @@ def upload():
     filepath = os.path.join(app.config["UPLOAD_FOLDER"], file.filename)
     file.save(filepath)
 
-    # Open video with OpenCV
     cap = cv2.VideoCapture(filepath)
     if not cap.isOpened():
         return "Could not process video"
@@ -41,23 +39,18 @@ def upload():
             ret, frame = cap.read()
             if not ret:
                 break
-
-            # Convert BGR (OpenCV) → RGB (Mediapipe)
             rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
             results = pose.process(rgb)
-
             if results.pose_landmarks:
-                detected_frames += 1  # Count frames with a person detected
+                detected_frames += 1
 
     cap.release()
-
-    accuracy = (detected_frames / frame_count) * 100 if frame_count > 0 else 0
+    accuracy = round((detected_frames / frame_count) * 100, 2)
 
     return render_template(
         "result.html",
         frame_count=frame_count,
-        fps=fps,
+        fps=round(fps, 2),
         detected_frames=detected_frames,
         accuracy=accuracy
     )
