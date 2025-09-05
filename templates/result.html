@@ -1,24 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Workout Analysis Result</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <title>Workout Analysis Result</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
-  <div class="container mt-5">
-    <div class="card shadow-lg p-4 rounded-3">
-      <h2 class="text-center text-primary mb-4">Workout Analysis Report</h2>
-      <ul class="list-group list-group-flush">
-        <li class="list-group-item"><b>Total Frames:</b> {{ frame_count }}</li>
-        <li class="list-group-item"><b>Frames Per Second (FPS):</b> {{ "%.2f"|format(fps) }}</li>
-        <li class="list-group-item"><b>Person Detected in Frames:</b> {{ detected_frames }}</li>
-        <li class="list-group-item"><b>Detection Accuracy:</b> {{ "%.2f"|format(accuracy) }}%</li>
-      </ul>
-      <div class="text-center mt-4">
-        <a href="/" class="btn btn-primary">Upload Another Video</a>
-      </div>
+
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">🏋️ Workout Analysis Result</h2>
+
+        <div class="row text-center">
+            <div class="col-md-3">
+                <div class="card shadow-sm p-3 mb-3">
+                    <h5>Total Frames</h5>
+                    <p>{{ frame_count }}</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm p-3 mb-3">
+                    <h5>FPS</h5>
+                    <p>{{ fps }}</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm p-3 mb-3">
+                    <h5>Person Detected</h5>
+                    <p>{{ detected_frames }}</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm p-3 mb-3">
+                    <h5>Accuracy</h5>
+                    <p>{{ accuracy }} %</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            
+        
+    <a href="/" class="btn btn-primary">Go Back</a>
+    <a href="/download_csv" class="btn btn-success">⬇ Download CSV</a>
+    <a href="/download_pdf" class="btn btn-danger">📄 Download PDF</a>
+</div>
+    
+        </div>
     </div>
-  </div>
+
 </body>
 </html>
