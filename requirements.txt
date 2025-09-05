@@ -1,4 +1,6 @@
-Flask==3.1.2
-gunicorn
 opencv-python
-mediapipe
+Flask
+gunicorn
+matplotlib
+reportlab
+mediapipe-silicon
