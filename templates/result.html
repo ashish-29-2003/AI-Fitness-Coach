@@ -1,52 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <title>Workout Analysis Result</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        .btn {
+            display: inline-block;
+            margin: 10px;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .btn:hover { background: #0056b3; }
+    </style>
 </head>
-<body class="bg-light">
+<body>
+    <h2>Workout Analysis Result</h2>
+<p>Total Frames: {{ frame_count }}</p>
+<p>FPS: {{ fps }}</p>
+<p>Person Detected in Frames: {{ detected_frames }}</p>
+<p>Detection Accuracy: {{ accuracy }} %</p>
+<p>Push-ups Count: {{ pushups }}</p>
+<p>Squats Count: {{ squats }}</p>
+<p>Jumping Jacks Count: {{ jumping_jacks }}</p>
 
-    <div class="container mt-5">
-        <h2 class="text-center mb-4">🏋️ Workout Analysis Result</h2>
+<h3>Download Options</h3>
+<a href="/download_csv"><button> Download CSV</button></a>
+<a href="/download_pdf"><button> Download PDF</button></a>
+<a href="/download_video"><button>Download Processed Video</button></a>
+<br><br>
 
-        <div class="row text-center">
-            <div class="col-md-3">
-                <div class="card shadow-sm p-3 mb-3">
-                    <h5>Total Frames</h5>
-                    <p>{{ frame_count }}</p>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card shadow-sm p-3 mb-3">
-                    <h5>FPS</h5>
-                    <p>{{ fps }}</p>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card shadow-sm p-3 mb-3">
-                    <h5>Person Detected</h5>
-                    <p>{{ detected_frames }}</p>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card shadow-sm p-3 mb-3">
-                    <h5>Accuracy</h5>
-                    <p>{{ accuracy }} %</p>
-                </div>
-            </div>
-        </div>
 
-        <div class="text-center mt-4">
-            
-        
-    <a href="/" class="btn btn-primary">Go Back</a>
-    <a href="/download_csv" class="btn btn-success">⬇ Download CSV</a>
-    <a href="/download_pdf" class="btn btn-danger">📄 Download PDF</a>
-</div>
-    
-        </div>
-    </div>
 
+    <br><br>
+    <a href="/" class="btn" style="background: gray;">Back</a>
 </body>
 </html>

@@ -1,28 +1,20 @@
 from flask import Flask, request, render_template, send_file
 import os
 import cv2
+import mediapipe as mp
 import csv
 import matplotlib.pyplot as plt
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 
-# Try importing mediapipe (fallback if not available)
-try:
-    import mediapipe as mp
-    mp_pose = mp.solutions.pose
-    mp_drawing = mp.solutions.drawing_utils
-    USE_MEDIAPIPE = True
-except ImportError:
-    print("⚠️ Mediapipe not available, running in fallback mode")
-    mp_pose = None
-    mp_drawing = None
-    USE_MEDIAPIPE = False
-
 app = Flask(__name__)
 UPLOAD_FOLDER = "uploads"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+mp_pose = mp.solutions.pose
+mp_drawing = mp.solutions.drawing_utils
 
 @app.route("/")
 def index():
@@ -31,24 +23,25 @@ def index():
 @app.route("/upload", methods=["POST"])
 def upload():
     if "video" not in request.files:
-        return "❌ No file uploaded"
+        return "No file uploaded"
 
     file = request.files["video"]
     if file.filename == "":
-        return "❌ No selected file"
+        return "No selected file"
 
     filepath = os.path.join(app.config["UPLOAD_FOLDER"], file.filename)
     file.save(filepath)
 
     cap = cv2.VideoCapture(filepath)
     if not cap.isOpened():
-        return "⚠️ Could not process video"
+        return "Could not process video"
 
     frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    fps = cap.get(cv2.CAP_PROP_FPS) or 1
+    fps = cap.get(cv2.CAP_PROP_FPS)
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
+    # Output video with landmarks
     processed_video_path = os.path.join(app.config["UPLOAD_FOLDER"], "processed_video.mp4")
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
     out = cv2.VideoWriter(processed_video_path, fourcc, fps, (width, height))
@@ -58,47 +51,48 @@ def upload():
     snapshot_saved = False
     snapshot_path = os.path.join(app.config["UPLOAD_FOLDER"], "snapshot.png")
 
-    frame_idx = 0
-    if USE_MEDIAPIPE:
-        with mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5) as pose:
-            while True:
-                ret, frame = cap.read()
-                if not ret:
-                    break
-                frame_idx += 1
+    # Exercise counters
+    pushups = 0
+    squats = 0
+    jumping_jacks = 0
 
-                rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                results = pose.process(rgb)
-
-                if results.pose_landmarks:
-                    detected_frames += 1
-                    mp_drawing.draw_landmarks(frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
-
-                if not snapshot_saved and frame_idx == frame_count // 2:
-                    cv2.imwrite(snapshot_path, frame)
-                    snapshot_saved = True
-
-                out.write(frame)
-                accuracy_over_time.append(round((detected_frames / frame_idx) * 100, 2))
-    else:
-        # Fallback → assume 50% detection rate
+    with mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5) as pose:
+        frame_idx = 0
         while True:
             ret, frame = cap.read()
             if not ret:
                 break
             frame_idx += 1
-            if frame_idx % 2 == 0:  # fake detection
+
+            rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            results = pose.process(rgb)
+
+            if results.pose_landmarks:
                 detected_frames += 1
+                mp_drawing.draw_landmarks(frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
+
+                # --- Fake demo exercise logic (replace with actual detection later) ---
+                if frame_idx % 100 == 0:
+                    pushups += 1
+                if frame_idx % 120 == 0:
+                    squats += 1
+                if frame_idx % 150 == 0:
+                    jumping_jacks += 1
+
+            # Save snapshot at middle frame
+            if not snapshot_saved and frame_idx == frame_count // 2:
+                cv2.imwrite(snapshot_path, frame)
+                snapshot_saved = True
+
             out.write(frame)
             accuracy_over_time.append(round((detected_frames / frame_idx) * 100, 2))
-        cv2.imwrite(snapshot_path, frame)
 
     cap.release()
     out.release()
 
     accuracy = round((detected_frames / frame_count) * 100, 2)
 
-    # Save results
+    # Save results in global variable
     global analysis_result
     analysis_result = {
         "frame_count": frame_count,
@@ -107,27 +101,37 @@ def upload():
         "accuracy": accuracy,
         "accuracy_over_time": accuracy_over_time,
         "processed_video_path": processed_video_path,
-        "snapshot_path": snapshot_path
+        "snapshot_path": snapshot_path,
+        "pushups": pushups,
+        "squats": squats,
+        "jumping_jacks": jumping_jacks
     }
 
     return render_template("result.html", **analysis_result)
 
 @app.route("/download_csv")
 def download_csv():
+    global analysis_result
     filepath = os.path.join(app.config["UPLOAD_FOLDER"], "analysis_result.csv")
+
     with open(filepath, mode="w", newline="") as file:
         writer = csv.writer(file)
-        writer.writerow(["Total Frames", "FPS", "Detected Frames", "Accuracy (%)"])
+        writer.writerow(["Total Frames", "FPS", "Detected Frames", "Accuracy (%)", "Push-ups", "Squats", "Jumping Jacks"])
         writer.writerow([
             analysis_result["frame_count"],
             analysis_result["fps"],
             analysis_result["detected_frames"],
-            analysis_result["accuracy"]
+            analysis_result["accuracy"],
+            analysis_result["pushups"],
+            analysis_result["squats"],
+            analysis_result["jumping_jacks"]
         ])
+
     return send_file(filepath, as_attachment=True)
 
 @app.route("/download_pdf")
 def download_pdf():
+    global analysis_result
     filepath = os.path.join(app.config["UPLOAD_FOLDER"], "analysis_report.pdf")
 
     # Accuracy chart
@@ -143,17 +147,20 @@ def download_pdf():
     plt.savefig(chart_path)
     plt.close()
 
-    # PDF
+    # Create PDF
     c = canvas.Canvas(filepath, pagesize=letter)
     width, height = letter
+
     c.setFont("Helvetica-Bold", 20)
     c.drawCentredString(width / 2, height - 80, "Workout Analysis Report")
+
     c.setFont("Helvetica", 12)
     c.drawCentredString(width / 2, height - 110, "Generated by AI Fitness Coach")
     c.line(50, height - 120, width - 50, height - 120)
 
-    y = height - 160
+    # Report data
     c.setFont("Helvetica", 14)
+    y = height - 160
     c.drawString(80, y, f"Total Frames: {analysis_result['frame_count']}")
     y -= 30
     c.drawString(80, y, f"FPS: {analysis_result['fps']}")
@@ -161,22 +168,32 @@ def download_pdf():
     c.drawString(80, y, f"Person Detected Frames: {analysis_result['detected_frames']}")
     y -= 30
     c.drawString(80, y, f"Accuracy: {analysis_result['accuracy']} %")
+    y -= 30
+    c.drawString(80, y, f"Push-ups: {analysis_result['pushups']}")
+    y -= 30
+    c.drawString(80, y, f"Squats: {analysis_result['squats']}")
+    y -= 30
+    c.drawString(80, y, f"Jumping Jacks: {analysis_result['jumping_jacks']}")
 
+    # Insert chart
     y -= 220
     if os.path.exists(chart_path):
         c.drawImage(ImageReader(chart_path), 80, y, width=450, height=200)
 
+    # Insert snapshot
     y -= 250
     if os.path.exists(analysis_result["snapshot_path"]):
         c.drawImage(ImageReader(analysis_result["snapshot_path"]), 80, y, width=450, height=250)
 
     c.setFont("Helvetica-Oblique", 10)
     c.drawCentredString(width / 2, 50, "This report was auto-generated.")
+
     c.save()
     return send_file(filepath, as_attachment=True)
 
 @app.route("/download_video")
 def download_video():
+    global analysis_result
     return send_file(analysis_result["processed_video_path"], as_attachment=True)
 
 if __name__ == "__main__":
