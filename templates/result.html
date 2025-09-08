@@ -1,40 +1,85 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Workout Analysis Result</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #4ca1af, #2c3e50);
+            color: white;
+            text-align: center;
+            padding: 50px;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .result-box {
+            margin: 40px auto;
+            padding: 30px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            width: 70%;
+            box-shadow: 0px 5px 15px rgba(0,0,0,0.3);
+        }
+        p {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        .highlight {
+            font-weight: bold;
+            color: #2ecc71;
+        }
         .btn {
             display: inline-block;
             margin: 10px;
-            padding: 10px 20px;
-            background: #007bff;
+            background: #27ae60;
             color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
             text-decoration: none;
-            border-radius: 5px;
+            transition: 0.3s;
         }
-        .btn:hover { background: #0056b3; }
+        .btn:hover {
+            background: #2ecc71;
+        }
+        img {
+            margin-top: 20px;
+            border-radius: 10px;
+            max-width: 80%;
+        }
     </style>
 </head>
 <body>
-    <h2>Workout Analysis Result</h2>
-<p>Total Frames: {{ frame_count }}</p>
-<p>FPS: {{ fps }}</p>
-<p>Person Detected in Frames: {{ detected_frames }}</p>
-<p>Detection Accuracy: {{ accuracy }} %</p>
-<p>Push-ups Count: {{ pushups }}</p>
-<p>Squats Count: {{ squats }}</p>
-<p>Jumping Jacks Count: {{ jumping_jacks }}</p>
 
-<h3>Download Options</h3>
-<a href="/download_csv"><button> Download CSV</button></a>
-<a href="/download_pdf"><button> Download PDF</button></a>
-<a href="/download_video"><button>Download Processed Video</button></a>
-<br><br>
+    <h1> Workout Analysis Result</h1>
 
+    <div class="result-box">
+        <p>Total Frames: <span class="highlight">{{ frame_count }}</span></p>
+        <p>FPS: <span class="highlight">{{ fps }}</span></p>
+        <p>Person Detected Frames: <span class="highlight">{{ detected_frames }}</span></p>
+        <p>Accuracy: <span class="highlight">{{ accuracy }} %</span></p>
+        <p>Push-ups: <span class="highlight">{{ pushups }}</span></p>
+        <p>Squats: <span class="highlight">{{ squats }}</span></p>
+        <p>Jumping Jacks: <span class="highlight">{{ jumping_jacks }}</span></p>
 
+        {% if snapshot_path %}
+            <h3>Snapshot</h3>
+            <img src="{{ snapshot_path }}" alt="Workout Snapshot">
+        {% endif %}
 
-    <br><br>
-    <a href="/" class="btn" style="background: gray;">Back</a>
+        <div>
+            <a href="/download_csv" class="btn">Download CSV</a>
+            <a href="/download_pdf" class="btn">Download PDF</a>
+            <a href="/download_video" class="btn">Download Video</a>
+            <a href="/" class="btn"> Go Back</a>
+        </div>
+    </div>
+
 </body>
 </html>
