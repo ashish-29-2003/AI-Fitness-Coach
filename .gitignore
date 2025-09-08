@@ -1,18 +1,14 @@
+# Ignore SQLite database
+fitness_history.db
+
+# Ignore uploads and generated files
+uploads/
+outputs/
+*.csv
+*.pdf
+*.png
+*.mp4
+
 # Ignore Python cache
 __pycache__/
 *.pyc
-
-# Ignore virtual environments
-venv/
-env/
-
-# Ignore uploads (videos, images, charts)
-uploads/*
-!uploads/.gitkeep
-
-# Ignore Jupyter notebooks checkpoints
-.ipynb_checkpoints/
-
-# Ignore system files
-.DS_Store
-Thumbs.db
