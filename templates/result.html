@@ -48,7 +48,7 @@
         .btn:hover {
             background: #2ecc71;
         }
-        img {
+        img, video {
             margin-top: 20px;
             border-radius: 10px;
             max-width: 80%;
@@ -57,27 +57,35 @@
 </head>
 <body>
 
-    <h1> Workout Analysis Result</h1>
+    <h1>Workout Analysis Result</h1>
 
     <div class="result-box">
         <p>Total Frames: <span class="highlight">{{ frame_count }}</span></p>
         <p>FPS: <span class="highlight">{{ fps }}</span></p>
         <p>Person Detected Frames: <span class="highlight">{{ detected_frames }}</span></p>
         <p>Accuracy: <span class="highlight">{{ accuracy }} %</span></p>
-        <p>Push-ups: <span class="highlight">{{ pushups }}</span></p>
-        <p>Squats: <span class="highlight">{{ squats }}</span></p>
-        <p>Jumping Jacks: <span class="highlight">{{ jumping_jacks }}</span></p>
+        <p>💪 Push-ups: <span class="highlight">{{ pushups }}</span></p>
+        <p>🏋️ Squats: <span class="highlight">{{ squats }}</span></p>
+        <p>🤸 Jumping Jacks: <span class="highlight">{{ jumping_jacks }}</span></p>
 
         {% if snapshot_path %}
             <h3>Snapshot</h3>
             <img src="{{ snapshot_path }}" alt="Workout Snapshot">
         {% endif %}
 
+        {% if processed_video_path %}
+            <h3>🎥 Processed Video Preview</h3>
+            <video controls>
+                <source src="{{ processed_video_path }}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        {% endif %}
+
         <div>
             <a href="/download_csv" class="btn">Download CSV</a>
             <a href="/download_pdf" class="btn">Download PDF</a>
             <a href="/download_video" class="btn">Download Video</a>
-            <a href="/" class="btn"> Go Back</a>
+            <a href="/" class="btn">Go Back</a>
         </div>
     </div>
 
