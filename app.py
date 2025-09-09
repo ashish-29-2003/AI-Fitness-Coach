@@ -40,8 +40,6 @@ def upload():
 
     frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     fps = cap.get(cv2.CAP_PROP_FPS)
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
     detected_frames = 0
     accuracy_over_time = []
@@ -124,31 +122,12 @@ def upload():
         "jumping_jacks": jumping_jacks,
     }
 
-
     return render_template("result.html", **analysis_result)
 
 @app.route("/download_pdf")
 def download_pdf():
     global analysis_result
     filepath = os.path.join(app.config["UPLOAD_FOLDER"], "analysis_report.pdf")
-
-        # Row layout: Snapshot | Accuracy Chart | Exercise Pie
-    row_y = height - 500
-    image_width = 180
-    image_height = 180
-    x_positions = [80, 270, 460]  # left, center, right positions
-
-    # Snapshot
-    if os.path.exists(analysis_result["snapshot_path"]):
-        c.drawImage(ImageReader(analysis_result["snapshot_path"]), x_positions[0], row_y, width=image_width, height=image_height)
-
-    # Accuracy chart
-    if os.path.exists(os.path.join(app.config["UPLOAD_FOLDER"], "accuracy_chart.png")):
-        c.drawImage(ImageReader(os.path.join(app.config["UPLOAD_FOLDER"], "accuracy_chart.png")), x_positions[1], row_y, width=image_width, height=image_height)
-
-    # Pie chart
-    if os.path.exists(os.path.join(app.config["UPLOAD_FOLDER"], "exercise_pie.png")):
-        c.drawImage(ImageReader(os.path.join(app.config["UPLOAD_FOLDER"], "exercise_pie.png")), x_positions[2], row_y, width=image_width, height=image_height)
 
     # Create PDF
     c = canvas.Canvas(filepath, pagesize=letter)
@@ -177,9 +156,26 @@ def download_pdf():
     y -= 30
     c.drawString(80, y, f"Jumping Jacks: {analysis_result['jumping_jacks']}")
 
-    if os.path.exists(analysis_result["snapshot_path"]):
-        y -= 250
-        c.drawImage(ImageReader(analysis_result["snapshot_path"]), 80, y, width=450, height=250)
+    # Row layout: Snapshot | Accuracy Chart | Exercise Pie
+    row_y = y - 220
+    image_width = 150
+    image_height = 150
+    x_positions = [80, 250, 420]  # left, center, right
+
+    # Snapshot
+    snapshot_file = os.path.join(app.config["UPLOAD_FOLDER"], os.path.basename(analysis_result["snapshot_path"]))
+    if os.path.exists(snapshot_file):
+        c.drawImage(ImageReader(snapshot_file), x_positions[0], row_y, width=image_width, height=image_height)
+
+    # Accuracy chart
+    chart_file = os.path.join(app.config["UPLOAD_FOLDER"], "accuracy_chart.png")
+    if os.path.exists(chart_file):
+        c.drawImage(ImageReader(chart_file), x_positions[1], row_y, width=image_width, height=image_height)
+
+    # Pie chart
+    pie_file = os.path.join(app.config["UPLOAD_FOLDER"], "exercise_pie.png")
+    if os.path.exists(pie_file):
+        c.drawImage(ImageReader(pie_file), x_positions[2], row_y, width=image_width, height=image_height)
 
     c.setFont("Helvetica-Oblique", 10)
     c.drawCentredString(width / 2, 50, "This report was auto-generated.")
