@@ -56,6 +56,13 @@ def upload():
                 break
             frame_idx += 1
 
+            # Process only every 5th frame
+            if frame_idx % 5 != 0:
+                continue
+
+            # Resize to speed up processing
+            frame = cv2.resize(frame, (640, 480))
+
             rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             results = pose.process(rgb)
 
@@ -72,23 +79,23 @@ def upload():
                     jumping_jacks += 1
 
             # Save snapshot at middle frame
-            if not snapshot_saved and frame_idx == frame_count // 2:
+            if not snapshot_saved and frame_idx >= frame_count // 2:
                 cv2.imwrite(snapshot_path, frame)
                 snapshot_saved = True
 
-            accuracy_over_time.append(round((detected_frames / frame_idx) * 100, 2))
+            accuracy_over_time.append(round((detected_frames / (frame_idx // 5 + 1)) * 100, 2))
 
     cap.release()
 
-    accuracy = round((detected_frames / frame_count) * 100, 2)
+    accuracy = round((detected_frames / (frame_count // 5)) * 100, 2)
 
     # Accuracy chart
     chart_path = os.path.join(app.config["UPLOAD_FOLDER"], "accuracy_chart.png")
     plt.figure()
     plt.plot(range(1, len(accuracy_over_time) + 1), accuracy_over_time, color='blue', label="Accuracy")
-    plt.xlabel("Frame")
+    plt.xlabel("Frame Sample")
     plt.ylabel("Accuracy (%)")
-    plt.title("Detection Accuracy Over Time")
+    plt.title("Detection Accuracy Over Time (sampled)")
     plt.legend()
     plt.savefig(chart_path)
     plt.close()
