@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Workout History</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f9; text-align: center; }
+    h1 { margin: 20px; }
+    table { margin: 20px auto; border-collapse: collapse; width: 90%; }
+    th, td { border: 1px solid #ccc; padding: 10px; }
+    th { background: #27ae60; color: white; }
+    tr:nth-child(even) { background: #f9f9f9; }
+    a { color: #2980b9; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <h1>Workout History</h1>
+  <table>
+    <tr>
+      <th>Date</th>
+      <th>Frames</th>
+      <th>FPS</th>
+      <th>Accuracy</th>
+      <th>Push-ups</th>
+      <th>Squats</th>
+      <th>Jumping Jacks</th>
+      <th>Downloads</th>
+    </tr>
+    {% for w in workouts %}
+    <tr>
+      <td>{{ w.date.strftime("%Y-%m-%d %H:%M") }}</td>
+      <td>{{ w.frames }}</td>
+      <td>{{ w.fps }}</td>
+      <td>{{ w.accuracy }}%</td>
+      <td>{{ w.pushups }}</td>
+      <td>{{ w.squats }}</td>
+      <td>{{ w.jumping_jacks }}</td>
+      <td>
+        <a href="{{ url_for('download_video') }}">Video</a> |
+        <a href="{{ w.pdf_path }}">PDF</a> |
+        <a href="{{ w.csv_path }}">CSV</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  <a href="/">Back</a>
+</body>
+</html>

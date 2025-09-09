@@ -1,47 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Workout Analysis Result</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f9; }
-    h1 { text-align: center; color: #333; }
-    .stats { margin: 20px auto; width: 60%; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-    .stats p { font-size: 16px; margin: 8px 0; }
-    .charts { text-align: center; margin-top: 20px; }
-    img { max-width: 500px; margin: 10px; border: 1px solid #ddd; border-radius: 5px; }
-    .buttons { text-align: center; margin-top: 30px; }
-    .buttons a { margin: 10px; padding: 10px 20px; background: #007bff; color: #fff; text-decoration: none; border-radius: 5px; }
-    .buttons a:hover { background: #0056b3; }
-  </style>
+    <meta charset="UTF-8">
+    <title>Workout Analysis Result</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-  <h1>Workout Analysis Result</h1>
+<body class="bg-light">
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Workout Analysis Result</h2>
 
-  <div class="stats">
-    <p><strong>Total Frames:</strong> {{ frame_count }}</p>
-    <p><strong>FPS:</strong> {{ fps }}</p>
-    <p><strong>Person Detected Frames:</strong> {{ detected_frames }}</p>
-    <p><strong>Accuracy:</strong> {{ accuracy }} %</p>
-    <p><strong>Push-ups:</strong> {{ pushups }}</p>
-    <p><strong>Squats:</strong> {{ squats }}</p>
-    <p><strong>Jumping Jacks:</strong> {{ jumping_jacks }}</p>
-  </div>
+    <div class="card shadow p-3 mb-4">
+        <p><strong>Total Frames:</strong> {{ frame_count }}</p>
+        <p><strong>FPS:</strong> {{ fps }}</p>
+        <p><strong>Person Detected Frames:</strong> {{ detected_frames }}</p>
+        <p><strong>Accuracy:</strong> {{ accuracy }} %</p>
+        <p><strong>Push-ups:</strong> {{ pushups }}</p>
+        <p><strong>Squats:</strong> {{ squats }}</p>
+        <p><strong>Jumping Jacks:</strong> {{ jumping_jacks }}</p>
+    </div>
 
-  <div class="charts">
-    <h3>Snapshot</h3>
-    <img src="{{ snapshot_path }}" alt="Workout Snapshot">
+    <h4 class="text-center">Snapshot</h4>
+    <div class="text-center mb-4">
+        <img src="{{ url_for('uploads', filename=snapshot_path.split('/')[-1]) }}" alt="Workout Snapshot" width="400">
+    </div>
 
-    <h3>Detection Accuracy Over Time</h3>
-    <img src="{{ chart_path }}" alt="Accuracy Chart">
+    <h4 class="text-center">Detection Accuracy Over Time</h4>
+    <div class="text-center mb-4">
+        <img src="{{ url_for('uploads', filename=chart_path.split('/')[-1]) }}" alt="Accuracy Chart" width="400">
+    </div>
 
-    <h3>Exercise Distribution</h3>
-    <img src="{{ pie_chart }}" alt="Exercise Pie Chart">
-  </div>
+    <h4 class="text-center">Exercise Distribution</h4>
+    <div class="text-center mb-4">
+        <img src="{{ url_for('uploads', filename=pie_chart.split('/')[-1]) }}" alt="Exercise Pie Chart" width="400">
+    </div>
 
-  <div class="buttons">
-    <a href="/download_pdf">Download PDF Report</a>
-    <a href="/">Go Back</a>
-  </div>
+    <div class="text-center">
+        <a href="/download_pdf" class="btn btn-primary">Download PDF Report</a>
+        <a href="/" class="btn btn-secondary">Go Back</a>
+    </div>
+</div>
 </body>
 </html>
