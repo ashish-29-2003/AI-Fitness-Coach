@@ -132,6 +132,24 @@ def download_pdf():
     global analysis_result
     filepath = os.path.join(app.config["UPLOAD_FOLDER"], "analysis_report.pdf")
 
+        # Row layout: Snapshot | Accuracy Chart | Exercise Pie
+    row_y = height - 500
+    image_width = 180
+    image_height = 180
+    x_positions = [80, 270, 460]  # left, center, right positions
+
+    # Snapshot
+    if os.path.exists(analysis_result["snapshot_path"]):
+        c.drawImage(ImageReader(analysis_result["snapshot_path"]), x_positions[0], row_y, width=image_width, height=image_height)
+
+    # Accuracy chart
+    if os.path.exists(os.path.join(app.config["UPLOAD_FOLDER"], "accuracy_chart.png")):
+        c.drawImage(ImageReader(os.path.join(app.config["UPLOAD_FOLDER"], "accuracy_chart.png")), x_positions[1], row_y, width=image_width, height=image_height)
+
+    # Pie chart
+    if os.path.exists(os.path.join(app.config["UPLOAD_FOLDER"], "exercise_pie.png")):
+        c.drawImage(ImageReader(os.path.join(app.config["UPLOAD_FOLDER"], "exercise_pie.png")), x_positions[2], row_y, width=image_width, height=image_height)
+
     # Create PDF
     c = canvas.Canvas(filepath, pagesize=letter)
     width, height = letter
