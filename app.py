@@ -115,13 +115,15 @@ def upload():
         "fps": round(fps, 2),
         "detected_frames": detected_frames,
         "accuracy": accuracy,
+        "accuracy_over_time": accuracy_over_time,
+        "snapshot_path": f"/uploads/{os.path.basename(snapshot_path)}",
+        "chart_path": f"/uploads/{os.path.basename(chart_path)}",
+        "pie_chart": f"/uploads/{os.path.basename(pie_path)}",
         "pushups": pushups,
         "squats": squats,
         "jumping_jacks": jumping_jacks,
-        "snapshot_path": snapshot_path,
-        "chart_path": chart_path,
-        "pie_chart": pie_path,
     }
+
 
     return render_template("result.html", **analysis_result)
 

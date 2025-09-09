@@ -19,20 +19,22 @@
         <p><strong>Jumping Jacks:</strong> {{ jumping_jacks }}</p>
     </div>
 
-    <h4 class="text-center">Snapshot</h4>
-    <div class="text-center mb-4">
-        <img src="{{ url_for('uploads', filename=snapshot_path.split('/')[-1]) }}" alt="Workout Snapshot" width="400">
+<div class="row text-center mt-4">
+    <div class="col-md-4">
+        <h3>Snapshot</h3>
+        <img src="{{ snapshot_path }}" alt="Workout Snapshot" class="img-fluid" style="max-height:250px;">
     </div>
+    <div class="col-md-4">
+        <h3>Detection Accuracy Over Time</h3>
+        <img src="{{ chart_path }}" alt="Accuracy Chart" class="img-fluid" style="max-height:250px;">
+    </div>
+    <div class="col-md-4">
+        <h3>Exercise Distribution</h3>
+        <img src="{{ pie_chart }}" alt="Exercise Pie Chart" class="img-fluid" style="max-height:250px;">
+    </div>
+</div>
 
-    <h4 class="text-center">Detection Accuracy Over Time</h4>
-    <div class="text-center mb-4">
-        <img src="{{ url_for('uploads', filename=chart_path.split('/')[-1]) }}" alt="Accuracy Chart" width="400">
-    </div>
 
-    <h4 class="text-center">Exercise Distribution</h4>
-    <div class="text-center mb-4">
-        <img src="{{ url_for('uploads', filename=pie_chart.split('/')[-1]) }}" alt="Exercise Pie Chart" width="400">
-    </div>
 
     <div class="text-center">
         <a href="/download_pdf" class="btn btn-primary">Download PDF Report</a>
