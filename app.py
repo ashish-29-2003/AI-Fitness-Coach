@@ -157,25 +157,25 @@ def download_pdf():
     c.drawString(80, y, f"Jumping Jacks: {analysis_result['jumping_jacks']}")
 
     # Row layout: Snapshot | Accuracy Chart | Exercise Pie
-    row_y = y - 220
-    image_width = 150
-    image_height = 150
-    x_positions = [80, 250, 420]  # left, center, right
+    row_y = height - 450   # vertical position of the row
+    image_width = 160
+    image_height = 160
+    x_positions = [70, 230, 390]  # left, middle, right
 
     # Snapshot
-    snapshot_file = os.path.join(app.config["UPLOAD_FOLDER"], os.path.basename(analysis_result["snapshot_path"]))
-    if os.path.exists(snapshot_file):
-        c.drawImage(ImageReader(snapshot_file), x_positions[0], row_y, width=image_width, height=image_height)
+    snapshot_full = os.path.join(app.config["UPLOAD_FOLDER"], os.path.basename(analysis_result["snapshot_path"]))
+    if os.path.exists(snapshot_full):
+        c.drawImage(ImageReader(snapshot_full), x_positions[0], row_y, width=image_width, height=image_height)
 
-    # Accuracy chart
-    chart_file = os.path.join(app.config["UPLOAD_FOLDER"], "accuracy_chart.png")
-    if os.path.exists(chart_file):
-        c.drawImage(ImageReader(chart_file), x_positions[1], row_y, width=image_width, height=image_height)
+    # Accuracy Chart
+    chart_full = os.path.join(app.config["UPLOAD_FOLDER"], "accuracy_chart.png")
+    if os.path.exists(chart_full):
+        c.drawImage(ImageReader(chart_full), x_positions[1], row_y, width=image_width, height=image_height)
 
-    # Pie chart
-    pie_file = os.path.join(app.config["UPLOAD_FOLDER"], "exercise_pie.png")
-    if os.path.exists(pie_file):
-        c.drawImage(ImageReader(pie_file), x_positions[2], row_y, width=image_width, height=image_height)
+    # Pie Chart
+    pie_full = os.path.join(app.config["UPLOAD_FOLDER"], "exercise_pie.png")
+    if os.path.exists(pie_full):
+        c.drawImage(ImageReader(pie_full), x_positions[2], row_y, width=image_width, height=image_height)
 
     c.setFont("Helvetica-Oblique", 10)
     c.drawCentredString(width / 2, 50, "This report was auto-generated.")
