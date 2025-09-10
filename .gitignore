@@ -1,14 +1,12 @@
-# Ignore SQLite database
-fitness_history.db
+# Ignore uploaded/generated files
+uploads/*
+!uploads/.gitkeep
 
-# Ignore uploads and generated files
-uploads/
-outputs/
+# Ignore temporary/large files
+*.mp4
+*.png
+*.jpg
 *.csv
 *.pdf
-*.png
-*.mp4
-
-# Ignore Python cache
-__pycache__/
 *.pyc
+__pycache__/
