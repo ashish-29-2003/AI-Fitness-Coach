@@ -1,42 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <h3>Workout Analysis Results</h3>
+  <meta charset="UTF-8">
+  <title>Workout Results</title>
+</head>
+<body>
+  <h1>✅ Workout Analysis Results</h1>
+  <p>Total Frames: {{ frame_count }}</p>
+  <p>FPS: {{ fps }}</p>
+  <p>Detected Frames: {{ detected_frames }}</p>
+  <p>Accuracy: {{ accuracy }}%</p>
+  <p>Push-ups: {{ pushups }}</p>
+  <p>Squats: {{ squats }}</p>
+  <p>Jumping Jacks: {{ jumping_jacks }}</p>
 
-<p><strong>Total Frames:</strong> {{ frame_count }}</p>
-<p><strong>FPS:</strong> {{ fps }}</p>
-<p><strong>Detected Frames:</strong> {{ detected_frames }}</p>
-<p><strong>Accuracy:</strong> {{ accuracy }} %</p>
-<p><strong>Push-ups:</strong> {{ pushups }}</p>
-<p><strong>Squats:</strong> {{ squats }}</p>
-<p><strong>Jumping Jacks:</strong> {{ jumping_jacks }}</p>
+  <h2>📊 Visuals</h2>
+  <div style="display:flex; gap:20px;">
+    <img src="{{ snapshot_path }}" width="200">
+    <img src="{{ chart_path }}" width="200">
+    <img src="{{ pie_chart }}" width="200">
+  </div>
 
-<hr>
+  <h2>⬇ Download Report</h2>
+  <a href="/download_pdf">Download PDF</a>
 
-<h3>Visual Results</h3>
-<div style="display: flex; justify-content: space-around; align-items: center; margin-top: 20px;">
-    <div>
-        <h4>Snapshot</h4>
-        <img src="{{ snapshot_path }}" alt="Snapshot" width="250">
-    </div>
-    <div>
-        <h4>Accuracy Over Time</h4>
-        <img src="{{ chart_path }}" alt="Accuracy Chart" width="250">
-    </div>
-    <div>
-        <h4>Exercise Distribution</h4>
-        <img src="{{ pie_chart }}" alt="Exercise Pie Chart" width="250">
-    </div>
-    <div style="margin-top: 20px;">
-  <a href="/camera" style="padding:10px; background:blue; color:white; text-decoration:none; border-radius:5px;">🎥 Start Camera</a>
-</div>
+  <h2>🎥 Try Camera Mode</h2>
+  <form action="/start_camera" method="get">
+    <label for="camera_index">Choose Camera:</label>
+    <select name="camera_index" id="camera_index">
+      <option value="0">Default Camera (Laptop)</option>
+      <option value="1">USB Camera 1</option>
+      <option value="2">USB Camera 2</option>
+      <option value="3">Other External Camera</option>
+    </select>
+    <button type="submit">Start Camera</button>
+  </form>
 
-</div>
-
-<hr>
-
-<a href="/download_pdf">Download PDF Report</a>
-
+  <br>
+  <a href="/">⬅ Back to Home</a>
 </body>
 </html>
