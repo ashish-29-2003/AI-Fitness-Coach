@@ -1,79 +1,49 @@
-from flask import Flask, request, render_template, Response, redirect, url_for
+from flask import Flask, render_template, Response, request, send_file, send_from_directory
 import cv2
-import mediapipe as mp
+import os
 
 app = Flask(__name__)
+UPLOAD_FOLDER = "uploads"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
-# Global variables
-camera_index = 0
-cap = None
+# Global camera object (keeps running for speed)
+camera = None
 
-mp_pose = mp.solutions.pose
-mp_drawing = mp.solutions.drawing_utils
+def get_camera(index=0):
+    global camera
+    if camera is None or not camera.isOpened():
+        camera = cv2.VideoCapture(index, cv2.CAP_DSHOW)  # CAP_DSHOW makes startup faster on Windows
+    return camera
 
-# ---- Home ----
+def gen_frames():
+    cap = get_camera()
+    while True:
+        success, frame = cap.read()
+        if not success:
+            break
+        else:
+            ret, buffer = cv2.imencode('.jpg', frame)
+            frame = buffer.tobytes()
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
 @app.route("/")
 def index():
     return render_template("index.html")
 
-# ---- Start camera with selected index ----
-@app.route("/start_camera", methods=["POST"])
-def start_camera():
-    global camera_index, cap
-    camera_index = int(request.form.get("camera_index", 0))
-
-    # Release any previous capture
-    if cap is not None:
-        cap.release()
-
-    # Re-initialize with chosen camera
-    cap = cv2.VideoCapture(camera_index)
-
-    return redirect(url_for("camera"))
-
-# ---- Camera preview page ----
 @app.route("/camera")
-def camera():
+def camera_page():
     return render_template("camera.html")
-
-# ---- Stream feed ----
-def generate_frames():
-    global cap
-    if cap is None:
-        cap = cv2.VideoCapture(camera_index)
-
-    with mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5) as pose:
-        while cap.isOpened():
-            success, frame = cap.read()
-            if not success:
-                break
-
-            # Pose detection
-            rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            results = pose.process(rgb)
-
-            if results.pose_landmarks:
-                mp_drawing.draw_landmarks(frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
-
-            # Encode frame
-            ret, buffer = cv2.imencode('.jpg', frame)
-            frame = buffer.tobytes()
-
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
 @app.route("/camera_feed")
 def camera_feed():
-    return Response(generate_frames(), mimetype="multipart/x-mixed-replace; boundary=frame")
+    return Response(gen_frames(), mimetype="multipart/x-mixed-replace; boundary=frame")
 
-# ---- Cleanup ----
-@app.route("/stop_camera")
-def stop_camera():
-    global cap
-    if cap is not None:
-        cap.release()
-        cap = None
-    return redirect(url_for("index"))
+# Route to serve uploads if needed
+@app.route('/uploads/<path:filename>')
+def uploads(filename):
+    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
 if __name__ == "__main__":
     app.run(debug=True)
