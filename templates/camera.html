@@ -6,7 +6,7 @@
 </head>
 <body>
   <h1>📷 Live Camera Preview</h1>
-  <img src="{{ stream_url }}" width="640" height="480">
+  <img src="{{ url_for('camera_feed') }}" width="640" height="480">
   <p>Pose landmarks will appear in real time.</p>
   <a href="/">⬅ Back to Home</a>
 </body>
