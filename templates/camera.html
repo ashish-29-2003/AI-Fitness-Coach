@@ -2,12 +2,24 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Camera Preview - AI Fitness Coach</title>
+  <title>Camera Selection - AI Fitness Coach</title>
 </head>
 <body>
   <h1>📷 Live Camera Preview</h1>
+
+  <form method="post">
+    <label for="camera_index">Select Camera:</label>
+    <select name="camera_index" id="camera_index">
+      <option value="0" {% if current_index == 0 %}selected{% endif %}>Laptop Camera (0)</option>
+      <option value="1" {% if current_index == 1 %}selected{% endif %}>External USB Camera (1)</option>
+      <option value="2" {% if current_index == 2 %}selected{% endif %}>Other Camera (2)</option>
+    </select>
+    <button type="submit">Switch Camera</button>
+  </form>
+
+  <br>
   <img src="{{ url_for('camera_feed') }}" width="640" height="480">
-  <p>👉 To switch camera, go to your browser settings (chrome://settings/content/camera) and select your USB or laptop camera.</p>
+  <p>Choose your camera above 👆 and stream updates instantly.</p>
   <a href="/">⬅ Back to Home</a>
 </body>
 </html>
