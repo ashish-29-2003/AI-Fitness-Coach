@@ -1,27 +1,18 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Camera Preview - AI Fitness Coach</title>
-</head>
-<body>
-  <h1>📷 Live Camera Preview</h1>
+<h1>📷 Live Camera Preview</h1>
 
-  <form method="get" action="/camera">
-    <label for="cam_id">Choose Camera:</label>
-    <select name="cam_id" id="cam_id">
-      <option value="0">Default Camera (Laptop)</option>
-      <option value="1">External Camera 1</option>
-      <option value="2">External Camera 2</option>
-    </select>
-    <button type="submit">Start Camera</button>
-  </form>
+<select id="cameraSelect">
+  <option value="0">Laptop Camera (Default)</option>
+  <option value="1">External USB Camera</option>
+  <option value="2">Other Camera (if available)</option>
+</select>
+<button onclick="startCamera()">Start Camera</button>
 
-  {% if camera_active %}
-    <img src="{{ url_for('camera_feed', cam_id=cam_id) }}" width="640" height="480">
-    <p>Pose landmarks will appear in real time.</p>
-  {% endif %}
+<br><br>
+<img id="cameraFeed" width="640" height="480">
 
-  <a href="/">⬅ Back to Home</a>
-</body>
-</html>
+<script>
+function startCamera() {
+    const cameraId = document.getElementById("cameraSelect").value;
+    document.getElementById("cameraFeed").src = `/camera_feed/${cameraId}`;
+}
+</script>
