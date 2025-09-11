@@ -5,24 +5,9 @@
   <title>Camera Preview - AI Fitness Coach</title>
 </head>
 <body>
-  <h1>Live Camera Preview</h1>
-
-  <form action="/start_camera" method="get">
-    <label for="camera_index">Select Camera:</label>
-    <select name="camera_index" id="camera_index">
-      <option value="0">Default Camera (Laptop/Primary)</option>
-      <option value="1">External Camera 1</option>
-      <option value="2">External Camera 2</option>
-    </select>
-    <button type="submit">Start Camera</button>
-  </form>
-
-  {% if stream_url %}
-    <h3>Streaming from Camera {{ cam_index }}</h3>
-    <img src="{{ stream_url }}" width="640" height="480">
-    <p>Pose landmarks will appear in real time.</p>
-  {% endif %}
-
-  <a href="/">Back to Home</a>
+  <h1>📷 Live Camera Preview</h1>
+  <img src="{{ stream_url }}" width="640" height="480">
+  <p>Pose landmarks will appear in real time.</p>
+  <a href="/">⬅ Back to Home</a>
 </body>
 </html>
