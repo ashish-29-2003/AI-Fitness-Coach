@@ -1,18 +1,15 @@
-<h1>📷 Live Camera Preview</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Camera Preview - AI Fitness Coach</title>
+</head>
+<body>
+  <h1>📷 Live Camera Preview</h1>
+  <img src="{{ url_for('camera_feed') }}" width="640" height="480">
+  <p>Pose landmarks will appear in real time.</p>
 
-<select id="cameraSelect">
-  <option value="0">Laptop Camera (Default)</option>
-  <option value="1">External USB Camera</option>
-  <option value="2">Other Camera (if available)</option>
-</select>
-<button onclick="startCamera()">Start Camera</button>
-
-<br><br>
-<img id="cameraFeed" width="640" height="480">
-
-<script>
-function startCamera() {
-    const cameraId = document.getElementById("cameraSelect").value;
-    document.getElementById("cameraFeed").src = `/camera_feed/${cameraId}`;
-}
-</script>
+  <a href="/stop_camera">⏹ Stop Camera</a> |
+  <a href="/">⬅ Back to Home</a>
+</body>
+</html>
