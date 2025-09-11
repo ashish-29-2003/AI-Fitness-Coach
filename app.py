@@ -130,33 +130,35 @@ def generate_camera_feed(cam_index):
 
 @app.route("/camera")
 def camera():
-    cam_id = int(request.args.get("cam_id", 0))  # default = 0
-    return render_template("camera.html", cam_id=cam_id, camera_active=True)
+    return render_template("camera.html")
 
-@app.route("/camera_feed")
-def camera_feed():
-    cam_id = int(request.args.get("cam_id", 0))  # pick camera from query
-    return Response(gen_frames(cam_id),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
+@app.route("/camera_feed/<int:camera_id>")
+def camera_feed(camera_id):
+    def generate():
+        cap = cv2.VideoCapture(camera_id)
+        mp_pose = mp.solutions.pose
+        mp_drawing = mp.solutions.drawing_utils
 
-def gen_frames(cam_id=0):  
-    cap = cv2.VideoCapture(cam_id)
-    with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as pose:
-        while True:
-            success, frame = cap.read()
-            if not success:
-                break
-            rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            results = pose.process(rgb)
+        with mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5) as pose:
+            while True:
+                ret, frame = cap.read()
+                if not ret:
+                    break
 
-            if results.pose_landmarks:
-                mp_drawing.draw_landmarks(frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
+                rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                results = pose.process(rgb)
 
-            ret, buffer = cv2.imencode('.jpg', frame)
-            frame = buffer.tobytes()
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+                if results.pose_landmarks:
+                    mp_drawing.draw_landmarks(frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
 
+                _, buffer = cv2.imencode('.jpg', frame)
+                frame_bytes = buffer.tobytes()
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+
+        cap.release()
+
+    return Response(generate(), mimetype="multipart/x-mixed-replace; boundary=frame")
 
 # ---------------- PDF ----------------
 @app.route("/download_pdf")
