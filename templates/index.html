@@ -6,22 +6,13 @@
 </head>
 <body>
   <h1>🏋️ AI Fitness Coach</h1>
-
-  <h2>Upload a Video</h2>
   <form action="/upload" method="post" enctype="multipart/form-data">
     <input type="file" name="video" accept="video/*">
-    <button type="submit">Upload</button>
+    <button type="submit">Upload Video</button>
   </form>
-
-  <h2>Start Camera</h2>
-  <form action="/start_camera" method="post">
-    <label for="camera_index">Choose Camera:</label>
-    <select name="camera_index" id="camera_index">
-      <option value="0">Laptop Camera (Default)</option>
-      <option value="1">External Camera (USB)</option>
-      <option value="2">Other Camera (HDMI / Extra)</option>
-    </select>
-    <button type="submit">Start Camera</button>
-  </form>
+  <br>
+  <a href="/camera">
+    <button>📷 Start Camera</button>
+  </a>
 </body>
 </html>
