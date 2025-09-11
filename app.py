@@ -2,9 +2,8 @@ from flask import Flask, request, render_template, send_file, send_from_director
 import os
 import cv2
 import mediapipe as mp
-import csv
 import matplotlib
-matplotlib.use('Agg')  # For servers without display
+matplotlib.use('Agg')  # no GUI
 import matplotlib.pyplot as plt
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
@@ -18,15 +17,16 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 mp_pose = mp.solutions.pose
 mp_drawing = mp.solutions.drawing_utils
 
+# ---------------- HOME ----------------
 @app.route("/")
 def index():
     return render_template("index.html")
 
+# ---------------- UPLOAD VIDEO ----------------
 @app.route("/upload", methods=["POST"])
 def upload():
     if "video" not in request.files:
         return "No file uploaded"
-
     file = request.files["video"]
     if file.filename == "":
         return "No selected file"
@@ -40,27 +40,20 @@ def upload():
 
     frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     fps = cap.get(cv2.CAP_PROP_FPS)
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-
-    detected_frames = 0
-    accuracy_over_time = []
-    snapshot_saved = False
+    detected_frames, snapshot_saved = 0, False
     snapshot_path = os.path.join(app.config["UPLOAD_FOLDER"], "snapshot.png")
+    accuracy_over_time = []
 
-    # Exercise counters (dummy logic for now)
-    pushups = 0
-    squats = 0
-    jumping_jacks = 0
+    # Exercise counters
+    pushups = squats = jumping_jacks = 0
 
-    with mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5) as pose:
+    with mp_pose.Pose(min_detection_confidence=0.5) as pose:
         frame_idx = 0
         while True:
             ret, frame = cap.read()
             if not ret:
                 break
             frame_idx += 1
-
             rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             results = pose.process(rgb)
 
@@ -68,13 +61,10 @@ def upload():
                 detected_frames += 1
                 mp_drawing.draw_landmarks(frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
 
-                # Fake exercise detection
-                if frame_idx % 100 == 0:
-                    pushups += 1
-                if frame_idx % 120 == 0:
-                    squats += 1
-                if frame_idx % 150 == 0:
-                    jumping_jacks += 1
+                # Demo counters
+                if frame_idx % 100 == 0: pushups += 1
+                if frame_idx % 120 == 0: squats += 1
+                if frame_idx % 150 == 0: jumping_jacks += 1
 
             if not snapshot_saved and frame_idx == frame_count // 2:
                 cv2.imwrite(snapshot_path, frame)
@@ -83,26 +73,23 @@ def upload():
             accuracy_over_time.append(round((detected_frames / frame_idx) * 100, 2))
 
     cap.release()
-
     accuracy = round((detected_frames / frame_count) * 100, 2)
 
     # Accuracy chart
     chart_path = os.path.join(app.config["UPLOAD_FOLDER"], "accuracy_chart.png")
     plt.figure()
-    plt.plot(range(1, len(accuracy_over_time) + 1), accuracy_over_time, color='blue', label="Accuracy")
+    plt.plot(range(1, len(accuracy_over_time) + 1), accuracy_over_time, color='blue')
     plt.xlabel("Frame")
     plt.ylabel("Accuracy (%)")
     plt.title("Detection Accuracy Over Time")
-    plt.legend()
     plt.savefig(chart_path)
     plt.close()
 
     # Pie chart
-    labels = ["Push-ups", "Squats", "Jumping Jacks"]
-    values = [pushups, squats, jumping_jacks]
     pie_path = os.path.join(app.config["UPLOAD_FOLDER"], "exercise_pie.png")
     plt.figure()
-    plt.pie(values, labels=labels, autopct="%1.1f%%", startangle=140)
+    plt.pie([pushups, squats, jumping_jacks], labels=["Push-ups", "Squats", "Jumping Jacks"],
+            autopct="%1.1f%%", startangle=140)
     plt.title("Exercise Distribution")
     plt.savefig(pie_path)
     plt.close()
@@ -113,81 +100,33 @@ def upload():
         "fps": round(fps, 2),
         "detected_frames": detected_frames,
         "accuracy": accuracy,
-        "accuracy_over_time": accuracy_over_time,
         "snapshot_path": f"/uploads/{os.path.basename(snapshot_path)}",
         "chart_path": f"/uploads/{os.path.basename(chart_path)}",
         "pie_chart": f"/uploads/{os.path.basename(pie_path)}",
         "pushups": pushups,
         "squats": squats,
-        "jumping_jacks": jumping_jacks,
+        "jumping_jacks": jumping_jacks
     }
 
     return render_template("result.html", **analysis_result)
 
-@app.route("/download_pdf")
-def download_pdf():
-    global analysis_result
-    filepath = os.path.join(app.config["UPLOAD_FOLDER"], "analysis_report.pdf")
-    c = canvas.Canvas(filepath, pagesize=letter)
-    width, height = letter
+# ---------------- CAMERA MODE ----------------
+def generate_camera_feed(cam_index):
+    cap = cv2.VideoCapture(cam_index)
+    with mp_pose.Pose(min_detection_confidence=0.5) as pose:
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            results = pose.process(rgb)
+            if results.pose_landmarks:
+                mp_drawing.draw_landmarks(frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
 
-    # Header
-    c.setFont("Helvetica-Bold", 20)
-    c.drawCentredString(width / 2, height - 80, "Workout Analysis Report")
-    c.setFont("Helvetica", 12)
-    c.drawCentredString(width / 2, height - 110, "Generated by AI Fitness Coach")
-    c.line(50, height - 120, width - 50, height - 120)
-
-    # Stats
-    y = height - 160
-    c.setFont("Helvetica", 14)
-    c.drawString(80, y, f"Total Frames: {analysis_result['frame_count']}")
-    y -= 30
-    c.drawString(80, y, f"FPS: {analysis_result['fps']}")
-    y -= 30
-    c.drawString(80, y, f"Detected Frames: {analysis_result['detected_frames']}")
-    y -= 30
-    c.drawString(80, y, f"Accuracy: {analysis_result['accuracy']} %")
-    y -= 30
-    c.drawString(80, y, f"Push-ups: {analysis_result['pushups']}")
-    y -= 30
-    c.drawString(80, y, f"Squats: {analysis_result['squats']}")
-    y -= 30
-    c.drawString(80, y, f"Jumping Jacks: {analysis_result['jumping_jacks']}")
-
-    # Row layout of images
-    row_y = height - 450
-    image_width = 160
-    image_height = 160
-    x_positions = [70, 230, 390]
-
-    snapshot_full = os.path.join(app.config["UPLOAD_FOLDER"], os.path.basename(analysis_result["snapshot_path"]))
-    if os.path.exists(snapshot_full):
-        c.drawImage(ImageReader(snapshot_full), x_positions[0], row_y, width=image_width, height=image_height)
-
-    chart_full = os.path.join(app.config["UPLOAD_FOLDER"], "accuracy_chart.png")
-    if os.path.exists(chart_full):
-        c.drawImage(ImageReader(chart_full), x_positions[1], row_y, width=image_width, height=image_height)
-
-    pie_full = os.path.join(app.config["UPLOAD_FOLDER"], "exercise_pie.png")
-    if os.path.exists(pie_full):
-        c.drawImage(ImageReader(pie_full), x_positions[2], row_y, width=image_width, height=image_height)
-
-    c.setFont("Helvetica-Oblique", 10)
-    c.drawCentredString(width / 2, 50, "This report was auto-generated.")
-
-    c.save()
-    return send_file(filepath, as_attachment=True)
-
-# Serve uploads
-@app.route('/uploads/<path:filename>')
-def uploads(filename):
-    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
-
-# -------- Camera Streaming --------
-@app.route("/camera")
-def camera_page():
-    return render_template("camera.html")
+            _, buffer = cv2.imencode('.jpg', frame)
+            frame = buffer.tobytes()
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
 @app.route("/start_camera")
 def start_camera():
@@ -199,22 +138,50 @@ def camera_feed():
     cam_index = int(request.args.get("cam_index", 0))
     return Response(generate_camera_feed(cam_index), mimetype="multipart/x-mixed-replace; boundary=frame")
 
-def generate_camera_feed(cam_index=0):
-    cap = cv2.VideoCapture(cam_index)
-    with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as pose:
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                break
-            rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            results = pose.process(rgb)
-            if results.pose_landmarks:
-                mp_drawing.draw_landmarks(frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
+# ---------------- PDF ----------------
+@app.route("/download_pdf")
+def download_pdf():
+    global analysis_result
+    filepath = os.path.join(app.config["UPLOAD_FOLDER"], "analysis_report.pdf")
+    c = canvas.Canvas(filepath, pagesize=letter)
+    width, height = letter
 
-            _, buffer = cv2.imencode(".jpg", frame)
-            frame = buffer.tobytes()
-            yield (b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + frame + b"\r\n")
-    cap.release()
+    c.setFont("Helvetica-Bold", 20)
+    c.drawCentredString(width/2, height-80, "Workout Analysis Report")
+    c.line(50, height-100, width-50, height-100)
+
+    y = height - 140
+    c.setFont("Helvetica", 12)
+    for key, label in [
+        ("frame_count", "Total Frames"),
+        ("fps", "FPS"),
+        ("detected_frames", "Detected Frames"),
+        ("accuracy", "Accuracy (%)"),
+        ("pushups", "Push-ups"),
+        ("squats", "Squats"),
+        ("jumping_jacks", "Jumping Jacks")
+    ]:
+        c.drawString(80, y, f"{label}: {analysis_result[key]}")
+        y -= 20
+
+    row_y = height - 400
+    image_w, image_h = 160, 160
+    x_positions = [70, 230, 390]
+    for path, pos in zip(
+        [analysis_result["snapshot_path"], analysis_result["chart_path"], analysis_result["pie_chart"]],
+        x_positions
+    ):
+        full_path = os.path.join(app.config["UPLOAD_FOLDER"], os.path.basename(path))
+        if os.path.exists(full_path):
+            c.drawImage(ImageReader(full_path), pos, row_y, width=image_w, height=image_h)
+
+    c.save()
+    return send_file(filepath, as_attachment=True)
+
+# ---------------- Serve Uploads ----------------
+@app.route('/uploads/<path:filename>')
+def uploads(filename):
+    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
 if __name__ == "__main__":
     app.run(debug=True)
