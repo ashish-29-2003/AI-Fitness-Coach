@@ -128,10 +128,9 @@ def generate_camera_feed(cam_index):
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
-@app.route("/start_camera")
-def start_camera():
-    cam_index = int(request.args.get("camera_index", 0))
-    return render_template("camera.html", stream_url=url_for('camera_feed', cam_index=cam_index), cam_index=cam_index)
+@app.route("/camera")
+def camera_page():
+    return render_template("camera.html")
 
 @app.route("/camera_feed")
 def camera_feed():
