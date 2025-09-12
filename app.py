@@ -1,4 +1,4 @@
-from flask import Flask, render_template, Response, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import cv2
@@ -9,7 +9,6 @@ from pose_estimation import analyze_video
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['SECRET_KEY'] = 'a_secret_key_for_flash_messages'
-# Correct path for SQLite database in the instance folder
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(app.instance_path, 'fitness_history.db')}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -37,32 +36,6 @@ class Workout(db.Model):
 
 with app.app_context():
     db.create_all()
-
-# Store camera state
-camera = None
-camera_index = 0  # default
-
-def get_camera(index=0):
-    global camera, camera_index
-    if camera is None or camera_index != index or not camera.isOpened():
-        if camera is not None:
-            camera.release()
-        # Use CAP_DSHOW for faster camera initialization on Windows
-        camera = cv2.VideoCapture(index, cv2.CAP_DSHOW)
-        camera_index = index
-    return camera
-
-def gen_frames():
-    cap = get_camera(camera_index)
-    while True:
-        success, frame = cap.read()
-        if not success:
-            break
-        else:
-            ret, buffer = cv2.imencode('.jpg', frame)
-            frame = buffer.tobytes()
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
 @app.route("/")
 def index():
@@ -127,17 +100,12 @@ def history():
     workouts = Workout.query.order_by(Workout.date.desc()).all()
     return render_template("history.html", workouts=workouts)
 
-@app.route("/camera", methods=["GET", "POST"])
+@app.route("/camera")
 def camera_page():
-    if request.method == "POST":
-        selected_index = int(request.form.get("camera_index", 0))
-        get_camera(selected_index)
-        return redirect(url_for("camera_page"))
-    return render_template("camera.html", current_index=camera_index)
-
-@app.route("/camera_feed")
-def camera_feed():
-    return Response(gen_frames(), mimetype="multipart/x-mixed-replace; boundary=frame")
+    # This route now simply serves the HTML page.
+    # The JavaScript on that page handles the camera.
+    return render_template("camera.html")
 
 if __name__ == "__main__":
     app.run(debug=True)
+
