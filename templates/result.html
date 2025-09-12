@@ -3,40 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <title>Workout Results</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f9; padding: 20px; }
+    .container { max-width: 800px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    h1, h2 { color: #333; }
+    p { font-size: 1.1em; }
+    .visuals { display: flex; gap: 20px; justify-content: center; margin-bottom: 20px; }
+    .visuals img { width: 200px; border: 1px solid #ccc; border-radius: 4px; }
+    .button-link {
+      display: inline-block;
+      padding: 10px 20px;
+      margin: 10px 5px;
+      background-color: #27ae60;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      font-size: 1em;
+      text-align: center;
+    }
+    .button-link.secondary { background-color: #2980b9; }
+  </style>
 </head>
 <body>
-  <h1>✅ Workout Analysis Results</h1>
-  <p>Total Frames: {{ frame_count }}</p>
-  <p>FPS: {{ fps }}</p>
-  <p>Detected Frames: {{ detected_frames }}</p>
-  <p>Accuracy: {{ accuracy }}%</p>
-  <p>Push-ups: {{ pushups }}</p>
-  <p>Squats: {{ squats }}</p>
-  <p>Jumping Jacks: {{ jumping_jacks }}</p>
+  <div class="container">
+    <h1>✅ Workout Analysis Results</h1>
+    <p><strong>Total Frames:</strong> {{ frame_count }}</p>
+    <p><strong>FPS:</strong> {{ fps }}</p>
+    <p><strong>Detected Frames:</strong> {{ detected_frames }}</p>
+    <p><strong>Accuracy:</strong> {{ accuracy }}%</p>
+    <p><strong>Push-ups:</strong> {{ pushups }}</p>
+    <p><strong>Squats:</strong> {{ squats }}</p>
+    <p><strong>Jumping Jacks:</strong> {{ jumping_jacks }}</p>
 
-  <h2>📊 Visuals</h2>
-  <div style="display:flex; gap:20px;">
-    <img src="{{ snapshot_path }}" width="200">
-    <img src="{{ chart_path }}" width="200">
-    <img src="{{ pie_chart }}" width="200">
+    <h2>📊 Visuals</h2>
+    <div class="visuals">
+      <img src="{{ snapshot_path }}" alt="Analysis Snapshot">
+      <img src="{{ chart_path }}" alt="Accuracy Chart">
+      <img src="{{ pie_chart }}" alt="Exercise Pie Chart">
+    </div>
+
+    <hr>
+
+    <a href="{{ url_for('download_pdf', workout_id=workout_id) }}" class="button-link">⬇ Download Report PDF</a>
+    <a href="{{ url_for('camera_page') }}" class="button-link secondary">📷 Try Camera Mode</a>
+    <a href="/" class="button-link secondary">⬅ Back to Home</a>
   </div>
-
-  <h2>⬇ Download Report</h2>
-  <a href="/download_pdf">Download PDF</a>
-
-  <h2>🎥 Try Camera Mode</h2>
-  <form action="/start_camera" method="get">
-    <label for="camera_index">Choose Camera:</label>
-    <select name="camera_index" id="camera_index">
-      <option value="0">Default Camera (Laptop)</option>
-      <option value="1">USB Camera 1</option>
-      <option value="2">USB Camera 2</option>
-      <option value="3">Other External Camera</option>
-    </select>
-    <button type="submit">Start Camera</button>
-  </form>
-
-  <br>
-  <a href="/">⬅ Back to Home</a>
 </body>
 </html>
