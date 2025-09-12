@@ -3,8 +3,8 @@ services:
     name: ai-fitness-coach
     env: python
     plan: free
+    # --- THE FIX ---
+    # Use the official 'pythonVersion' key to force the correct environment
+    pythonVersion: "3.10"
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.10.12
