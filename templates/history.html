@@ -4,45 +4,53 @@
   <meta charset="UTF-8">
   <title>Workout History</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #f4f4f9; text-align: center; }
-    h1 { margin: 20px; }
-    table { margin: 20px auto; border-collapse: collapse; width: 90%; }
-    th, td { border: 1px solid #ccc; padding: 10px; }
-    th { background: #27ae60; color: white; }
-    tr:nth-child(even) { background: #f9f9f9; }
-    a { color: #2980b9; text-decoration: none; }
+    body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; margin: 0; padding: 20px; text-align: center; }
+    h1 { color: #2c3e50; }
+    table { margin: 20px auto; border-collapse: collapse; width: 95%; max-width: 1200px; box-shadow: 0 2px 15px rgba(0,0,0,0.1); background-color: #fff; }
+    th, td { border: 1px solid #ddd; padding: 12px 15px; text-align: left; }
+    th { background-color: #3498db; color: white; text-transform: uppercase; font-size: 14px; }
+    tr:nth-child(even) { background-color: #f2f2f2; }
+    tr:hover { background-color: #e8f4fd; }
+    a { color: #2980b9; text-decoration: none; font-weight: bold; }
+    a:hover { text-decoration: underline; }
+    .home-link { display: inline-block; margin-top: 20px; font-size: 1.2em; }
   </style>
 </head>
 <body>
-  <h1>Workout History</h1>
+  <h1>📜 Workout History</h1>
   <table>
-    <tr>
-      <th>Date</th>
-      <th>Frames</th>
-      <th>FPS</th>
-      <th>Accuracy</th>
-      <th>Push-ups</th>
-      <th>Squats</th>
-      <th>Jumping Jacks</th>
-      <th>Downloads</th>
-    </tr>
-    {% for w in workouts %}
-    <tr>
-      <td>{{ w.date.strftime("%Y-%m-%d %H:%M") }}</td>
-      <td>{{ w.frames }}</td>
-      <td>{{ w.fps }}</td>
-      <td>{{ w.accuracy }}%</td>
-      <td>{{ w.pushups }}</td>
-      <td>{{ w.squats }}</td>
-      <td>{{ w.jumping_jacks }}</td>
-      <td>
-        <a href="{{ url_for('download_video') }}">Video</a> |
-        <a href="{{ w.pdf_path }}">PDF</a> |
-        <a href="{{ w.csv_path }}">CSV</a>
-      </td>
-    </tr>
-    {% endfor %}
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Frames</th>
+        <th>FPS</th>
+        <th>Accuracy</th>
+        <th>Push-ups</th>
+        <th>Squats</th>
+        <th>Jumping Jacks</th>
+        <th>Downloads</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for w in workouts %}
+      <tr>
+        <td>{{ w.date.strftime("%Y-%m-%d %H:%M") }}</td>
+        <td>{{ w.frames }}</td>
+        <td>{{ "%.2f"|format(w.fps) }}</td>
+        <td>{{ "%.2f"|format(w.accuracy) }}%</td>
+        <td>{{ w.pushups }}</td>
+        <td>{{ w.squats }}</td>
+        <td>{{ w.jumping_jacks }}</td>
+        <td>
+          <!-- BUG FIX: Changed 'download_video' to 'download_pdf' and passed the workout ID -->
+          <a href="{{ url_for('download_pdf', workout_id=w.id) }}">PDF</a>
+          <!-- Placeholder for CSV, which we can add next -->
+          <!-- <a href="#">CSV</a> -->
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
   </table>
-  <a href="/">Back</a>
+  <a href="/" class="home-link">⬅ Back to Home</a>
 </body>
 </html>
