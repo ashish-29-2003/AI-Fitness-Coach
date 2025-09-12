@@ -3,5 +3,7 @@ gunicorn
 opencv-python-headless
 matplotlib
 reportlab
-mediapipe
+
+Pinning to a specific version for deployment compatibility
+mediapipe==0.10.9
 Flask-SQLAlchemy>=3.1.0
