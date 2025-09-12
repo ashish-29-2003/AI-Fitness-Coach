@@ -67,7 +67,9 @@ def generate_pdf(workout):
     table = Table(data, colWidths=[200, 200])
     style = TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesoke),
+        # --- BUG FIX ---
+        # Corrected 'whitesoke' to 'whitesmoke'
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
@@ -109,7 +111,9 @@ def upload_file():
 
         analysis_results = analyze_video(filepath)
 
-        accuracy = (analysis_results['detected_frames'] / analysis_results['frame_count']) * 100 if analysis_results['frame_count'] > 0 else 0
+        # Accuracy is now based on detected frames vs *processed* frames
+        processed_frames = analysis_results['frame_count'] // 5 # Using 5 because FRAME_SKIP is 5
+        accuracy = (analysis_results['detected_frames'] / processed_frames) * 100 if processed_frames > 0 else 0
         
         new_workout = Workout(
             frames=analysis_results['frame_count'],
