@@ -1,10 +1,13 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, send_file
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import cv2
 import os
 from werkzeug.utils import secure_filename
 from pose_estimation import analyze_video
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Image, Spacer
+from reportlab.lib import colors
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -37,6 +40,51 @@ class Workout(db.Model):
 with app.app_context():
     db.create_all()
 
+def generate_pdf(workout):
+    """Generates a PDF report for a given workout session."""
+    pdf_filename = f"workout_report_{workout.id}.pdf"
+    pdf_filepath = os.path.join(app.config['UPLOAD_FOLDER'], pdf_filename)
+    
+    doc = SimpleDocTemplate(pdf_filepath, pagesize=letter)
+    elements = []
+    
+    title = "Workout Analysis Report"
+    elements.append(Table([[title]], style=[('ALIGN', (0, 0), (-1, -1), 'CENTER'), ('FONTSIZE', (0, 0), (-1, -1), 18)]))
+    elements.append(Spacer(1, 24))
+
+    data = [
+        ["Metric", "Value"],
+        ["Date", workout.date.strftime("%Y-%m-%d %H:%M:%S")],
+        ["Total Frames", str(workout.frames)],
+        ["FPS", f"{workout.fps:.2f}"],
+        ["Detected Frames", str(workout.detected_frames)],
+        ["Accuracy", f"{workout.accuracy:.2f}%"],
+        ["Push-ups", str(workout.pushups)],
+        ["Squats", str(workout.squats)],
+        ["Jumping Jacks", str(workout.jumping_jacks)],
+    ]
+
+    table = Table(data, colWidths=[200, 200])
+    style = TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+    ])
+    table.setStyle(style)
+    elements.append(table)
+    
+    doc.build(elements)
+    
+    # Save path to database
+    workout.pdf_path = pdf_filepath
+    db.session.commit()
+    
+    return pdf_filepath
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -61,10 +109,7 @@ def upload_file():
 
         analysis_results = analyze_video(filepath)
 
-        if analysis_results['frame_count'] > 0:
-            accuracy = (analysis_results['detected_frames'] / analysis_results['frame_count']) * 100
-        else:
-            accuracy = 0
+        accuracy = (analysis_results['detected_frames'] / analysis_results['frame_count']) * 100 if analysis_results['frame_count'] > 0 else 0
         
         new_workout = Workout(
             frames=analysis_results['frame_count'],
@@ -80,6 +125,7 @@ def upload_file():
         db.session.commit()
 
         context = {
+            'workout_id': new_workout.id,
             'frame_count': new_workout.frames,
             'fps': new_workout.fps,
             'detected_frames': new_workout.detected_frames,
@@ -95,6 +141,15 @@ def upload_file():
 
     return redirect(url_for('index'))
 
+@app.route("/download_pdf/<int:workout_id>")
+def download_pdf(workout_id):
+    workout = Workout.query.get_or_404(workout_id)
+    
+    if not workout.pdf_path or not os.path.exists(workout.pdf_path):
+        generate_pdf(workout)
+
+    return send_file(workout.pdf_path, as_attachment=True)
+
 @app.route("/history")
 def history():
     workouts = Workout.query.order_by(Workout.date.desc()).all()
@@ -102,8 +157,6 @@ def history():
 
 @app.route("/camera")
 def camera_page():
-    # This route now simply serves the HTML page.
-    # The JavaScript on that page handles the camera.
     return render_template("camera.html")
 
 if __name__ == "__main__":

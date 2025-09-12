@@ -27,6 +27,10 @@ def analyze_video(video_path):
     """
     cap = cv2.VideoCapture(video_path)
 
+    # --- OPTIMIZATION ---
+    # We will process only 1 in every 5 frames to make analysis faster.
+    FRAME_SKIP = 5
+
     # Exercise counters and stages
     pushup_counter = 0
     squat_counter = 0
@@ -44,6 +48,12 @@ def analyze_video(video_path):
             break
 
         frame_count += 1
+
+        # --- OPTIMIZATION ---
+        # If the current frame number is not a multiple of FRAME_SKIP, skip it.
+        if frame_count % FRAME_SKIP != 0:
+            continue
+
         # Recolor image to RGB
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         image.flags.writeable = False
@@ -85,7 +95,6 @@ def analyze_video(video_path):
                 squat_counter += 1
 
             # --- Jumping Jack Logic ---
-            # A simple heuristic for jumping jacks: check if hands are above shoulders
             if landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].y < landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y and \
                landmarks[mp_pose.PoseLandmark.RIGHT_WRIST.value].y < landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y:
                 jumping_jack_stage = "up"
@@ -105,3 +114,4 @@ def analyze_video(video_path):
         "squats": squat_counter,
         "jumping_jacks": jumping_jack_counter
     }
+
