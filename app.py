@@ -9,11 +9,13 @@ from pose_estimation import analyze_video
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['SECRET_KEY'] = 'a_secret_key_for_flash_messages'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/fitness_history.db'
+# Correct path for SQLite database in the instance folder
+app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(app.instance_path, 'fitness_history.db')}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Ensure the instance folder exists
-os.makedirs(os.path.join(app.instance_path), exist_ok=True)
+# Ensure the upload and instance folders exist
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs(app.instance_path, exist_ok=True)
 
 db = SQLAlchemy(app)
 
@@ -45,6 +47,7 @@ def get_camera(index=0):
     if camera is None or camera_index != index or not camera.isOpened():
         if camera is not None:
             camera.release()
+        # Use CAP_DSHOW for faster camera initialization on Windows
         camera = cv2.VideoCapture(index, cv2.CAP_DSHOW)
         camera_index = index
     return camera
@@ -90,10 +93,9 @@ def upload_file():
         else:
             accuracy = 0
         
-        # Save to database
         new_workout = Workout(
             frames=analysis_results['frame_count'],
-            fps=round(fps, 2),
+            fps=round(fps, 2) if fps else 0,
             detected_frames=analysis_results['detected_frames'],
             accuracy=round(accuracy, 2),
             pushups=analysis_results['pushups'],
