@@ -3,13 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <title>Live Camera - AI Fitness Coach</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; background-color: #f4f4f9; }
+    h1 { color: #333; }
+    #video-container {
+      margin: 20px auto;
+      border: 5px solid #333;
+      width: 640px;
+      height: 480px;
+      background-color: #000;
+    }
+    video {
+      width: 100%;
+      height: 100%;
+    }
+    a { color: #2980b9; text-decoration: none; font-size: 1.2em; }
+  </style>
 </head>
 <body>
   <h1>📷 Live Camera Preview</h1>
+  
+  <div id="video-container">
+    <video id="video" autoplay playsinline></video>
+  </div>
 
-  <img src="{{ url_for('camera_feed') }}" width="640" height="480">
-  <p>Streaming from your default camera.</p>
+  <p>Use the browser's URL bar permissions to change cameras.</p>
   <br>
   <a href="/">⬅ Back to Home</a>
+
+  <script>
+    const video = document.getElementById('video');
+
+    // Access the camera
+    async function setupCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: true 
+        });
+        video.srcObject = stream;
+      } catch (err) {
+        console.error("Error accessing camera: ", err);
+        alert("Could not access the camera. Please ensure you have granted permission and have a connected camera.");
+      }
+    }
+
+    setupCamera();
+  </script>
 </body>
 </html>
+
