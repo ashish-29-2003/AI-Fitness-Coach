@@ -10,7 +10,7 @@ exercise_state = {
 
 # Initialize MediaPipe components
 mp_pose = mp.solutions.pose
-mp_drawing = mp.solutions.drawing_utils # This is the drawing utility
+mp_drawing = mp.solutions.drawing_utils # The drawing utility
 pose = mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5)
 
 def calculate_angle(a, b, c):
@@ -25,21 +25,15 @@ def process_live_frame(frame):
     Processes a single frame for live exercise counting and adds visual feedback.
     Returns the annotated frame and the current rep counts.
     """
-    # Recolor image to RGB for MediaPipe processing
     image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     image.flags.writeable = False
-  
-    # Make detection
     results = pose.process(image)
-  
-    # Recolor back to BGR for rendering
     image.flags.writeable = True
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     
     try:
         landmarks = results.pose_landmarks.landmark
         
-        # Exercise counting logic (remains the same)
         # --- Push-up Logic ---
         shoulder_l = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x, landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
         elbow_l = [landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].x, landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].y]
@@ -65,27 +59,19 @@ def process_live_frame(frame):
             exercise_state['jumping_jack_stage'] = "down"; exercise_state['jumping_jack_counter'] += 1
 
     except Exception:
-        # Pass silently if no landmarks are detected in a frame
         pass
 
-    # --- NEW FEATURE: Draw the pose landmarks on the image ---
-    # This draws the skeleton on the frame *after* the logic is done.
     if results.pose_landmarks:
         mp_drawing.draw_landmarks(
-            image, 
-            results.pose_landmarks, 
-            mp_pose.POSE_CONNECTIONS,
+            image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
             mp_drawing.DrawingSpec(color=(245,117,66), thickness=2, circle_radius=2), 
             mp_drawing.DrawingSpec(color=(245,66,230), thickness=2, circle_radius=2) 
         )
 
-    # Prepare the data to be sent back
     rep_counts = {
         "pushups": exercise_state['pushup_counter'],
         "squats": exercise_state['squat_counter'],
         "jumping_jacks": exercise_state['jumping_jack_counter']
     }
-
-    # The function now returns both the annotated image and the rep counts
     return image, rep_counts
 
