@@ -1,54 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Live Camera - AI Fitness Coach</title>
-  <style>
-    body { font-family: Arial, sans-serif; text-align: center; background-color: #f4f4f9; }
-    h1 { color: #333; }
-    #video-container {
-      margin: 20px auto;
-      border: 5px solid #333;
-      width: 640px;
-      height: 480px;
-      background-color: #000;
-    }
-    video {
-      width: 100%;
-      height: 100%;
-    }
-    a { color: #2980b9; text-decoration: none; font-size: 1.2em; }
-  </style>
+    <meta charset="UTF-8">
+    <title>Live Workout - AI Fitness Coach</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; text-align: center; background-color: #f0f2f5; display: flex; flex-direction: column; align-items: center; margin: 0; padding-top: 20px;}
+        h1 { color: #1c1e21; }
+        #live-container { display: flex; gap: 30px; align-items: flex-start; }
+        #video-container { 
+            border: 5px solid #fff; 
+            width: 640px; 
+            height: 480px; 
+            background-color: #000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-radius: 8px;
+            overflow: hidden; /* Ensures the image inside respects the border radius */
+        }
+        /* This is now an img tag to display the processed frames from the server */
+        #video_feed { 
+            width: 100%; 
+            height: 100%; 
+            transform: scaleX(-1); /* Flips the image for a mirror effect */
+        }
+        #results-container { 
+            width: 300px; 
+            padding: 20px; 
+            background: #fff; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+            text-align: left;
+        }
+        h2 { border-bottom: 2px solid #e4e6eb; padding-bottom: 10px; margin-top: 0;}
+        .stat p { font-size: 1.5em; margin: 20px 0; }
+        .stat span { font-weight: bold; color: #1877f2; }
+        .home-link { display: inline-block; margin-top: 30px; font-size: 1.1em; color: #1877f2; text-decoration: none; font-weight: bold; }
+    </style>
 </head>
 <body>
-  <h1>📷 Live Camera Preview</h1>
-  
-  <div id="video-container">
-    <video id="video" autoplay playsinline></video>
-  </div>
+    <h1>🔴 Live AI Feedback</h1>
+    <div id="live-container">
+        <div id="video-container">
+            <!-- This img tag will display the processed video feed from the server -->
+            <img id="video_feed" src="" alt="Live Video Feed">
+        </div>
+        <div id="results-container">
+            <h2>Live Rep Counts</h2>
+            <div class="stat">
+                <p><strong>Push-ups:</strong> <span id="pushups">0</span></p>
+                <p><strong>Squats:</strong> <span id="squats">0</span></p>
+                <p><strong>Jumping Jacks:</strong> <span id="jumping_jacks">0</span></p>
+            </div>
+        </div>
+    </div>
+    <a href="/" class="home-link">🏠 Back to Home</a>
 
-  <p>Use the browser's URL bar permissions to change cameras.</p>
-  <br>
-  <a href="/">⬅ Back to Home</a>
+    <!-- This video element is now hidden; we only use it to capture the feed to send to the server -->
+    <video id="video" autoplay playsinline style="display:none;"></video>
+    <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
 
-  <script>
-    const video = document.getElementById('video');
+    <script>
+        const videoElement = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+        const videoFeed = document.getElementById('video_feed'); // The image tag we will update
 
-    // Access the camera
-    async function setupCamera() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: true 
+        const socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
+
+        socket.on('connect', () => console.log('Connected to server.'));
+
+        // Listen for the 'response' event from the server
+        socket.on('response', function(data) {
+            // Update the video feed with the new annotated image
+            videoFeed.src = 'data:image/jpeg;base64,' + data.image;
+
+            // Update the rep counts
+            document.getElementById('pushups').innerText = data.counts.pushups;
+            document.getElementById('squats').innerText = data.counts.squats;
+            document.getElementById('jumping_jacks').innerText = data.counts.jumping_jacks;
         });
-        video.srcObject = stream;
-      } catch (err) {
-        console.error("Error accessing camera: ", err);
-        alert("Could not access the camera. Please ensure you have granted permission and have a connected camera.");
-      }
-    }
 
-    setupCamera();
-  </script>
+        async function setupCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                videoElement.srcObject = stream;
+                // Send a frame to the server for processing every 200ms (5 FPS)
+                setInterval(sendFrame, 200); 
+            } catch (err) {
+                console.error("Error accessing camera: ", err);
+                alert("Could not access camera. Please grant permission.");
+            }
+        }
+
+        function sendFrame() {
+            context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+            const dataURL = canvas.toDataURL('image/jpeg', 0.7);
+            socket.emit('frame', dataURL);
+        }
+
+        setupCamera();
+    </script>
 </body>
 </html>
 
