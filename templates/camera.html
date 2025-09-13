@@ -9,42 +9,44 @@
         h1 { color: #1c1e21; }
         #live-container { display: flex; gap: 30px; align-items: flex-start; }
         #video-container { 
-            border: 5px solid #fff; 
-            width: 640px; 
-            height: 480px; 
-            background-color: #000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            border-radius: 8px;
-            overflow: hidden; /* Ensures the image inside respects the border radius */
+            border: 5px solid #fff; width: 640px; height: 480px; background-color: #000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 8px; overflow: hidden;
         }
-        /* This is now an img tag to display the processed frames from the server */
-        #video_feed { 
-            width: 100%; 
-            height: 100%; 
-            transform: scaleX(-1); /* Flips the image for a mirror effect */
-        }
-        #results-container { 
-            width: 300px; 
-            padding: 20px; 
-            background: #fff; 
-            border-radius: 8px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
-            text-align: left;
+        #video_feed { width: 100%; height: 100%; transform: scaleX(-1); }
+        #controls-container {
+            width: 300px; padding: 20px; background: #fff; border-radius: 8px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); text-align: left;
         }
         h2 { border-bottom: 2px solid #e4e6eb; padding-bottom: 10px; margin-top: 0;}
         .stat p { font-size: 1.5em; margin: 20px 0; }
         .stat span { font-weight: bold; color: #1877f2; }
+        .exercise-buttons button {
+            width: 100%; padding: 12px; margin-bottom: 10px; font-size: 1em;
+            border-radius: 6px; border: 1px solid #ddd; background-color: #f0f2f5;
+            cursor: pointer; transition: background-color 0.2s, color 0.2s;
+        }
+        .exercise-buttons button.active {
+            background-color: #1877f2; color: white; border-color: #1877f2;
+        }
+        #reset-btn { background-color: #fa383e; color: white; font-weight: bold; }
         .home-link { display: inline-block; margin-top: 30px; font-size: 1.1em; color: #1877f2; text-decoration: none; font-weight: bold; }
     </style>
 </head>
 <body>
-    <h1>🔴 Live AI Feedback</h1>
+    <h1>🔴 Live AI Coach</h1>
     <div id="live-container">
         <div id="video-container">
-            <!-- This img tag will display the processed video feed from the server -->
             <img id="video_feed" src="" alt="Live Video Feed">
         </div>
-        <div id="results-container">
+        <div id="controls-container">
+            <h2>Select Exercise</h2>
+            <div class="exercise-buttons">
+                <button id="pushups-btn" class="active">Push-ups</button>
+                <button id="squats-btn">Squats</button>
+                <button id="jacks-btn">Jumping Jacks</button>
+                <hr>
+                <button id="reset-btn">Reset Counters</button>
+            </div>
             <h2>Live Rep Counts</h2>
             <div class="stat">
                 <p><strong>Push-ups:</strong> <span id="pushups">0</span></p>
@@ -55,7 +57,6 @@
     </div>
     <a href="/" class="home-link">🏠 Back to Home</a>
 
-    <!-- This video element is now hidden; we only use it to capture the feed to send to the server -->
     <video id="video" autoplay playsinline style="display:none;"></video>
     <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
 
@@ -63,18 +64,31 @@
         const videoElement = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const context = canvas.getContext('2d');
-        const videoFeed = document.getElementById('video_feed'); // The image tag we will update
-
+        const videoFeed = document.getElementById('video_feed');
         const socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
 
-        socket.on('connect', () => console.log('Connected to server.'));
+        let currentExercise = 'pushups'; // Default exercise
 
-        // Listen for the 'response' event from the server
+        // --- Button Listeners ---
+        const pushupsBtn = document.getElementById('pushups-btn');
+        const squatsBtn = document.getElementById('squats-btn');
+        const jacksBtn = document.getElementById('jacks-btn');
+        const resetBtn = document.getElementById('reset-btn');
+
+        function setActiveButton(activeBtn) {
+            [pushupsBtn, squatsBtn, jacksBtn].forEach(btn => btn.classList.remove('active'));
+            activeBtn.classList.add('active');
+        }
+
+        pushupsBtn.onclick = () => { currentExercise = 'pushups'; setActiveButton(pushupsBtn); };
+        squatsBtn.onclick = () => { currentExercise = 'squats'; setActiveButton(squatsBtn); };
+        jacksBtn.onclick = () => { currentExercise = 'jumping_jacks'; setActiveButton(jacksBtn); };
+        resetBtn.onclick = () => socket.emit('reset_counters');
+
+        // --- Socket Communication ---
+        socket.on('connect', () => console.log('Connected!'));
         socket.on('response', function(data) {
-            // Update the video feed with the new annotated image
             videoFeed.src = 'data:image/jpeg;base64,' + data.image;
-
-            // Update the rep counts
             document.getElementById('pushups').innerText = data.counts.pushups;
             document.getElementById('squats').innerText = data.counts.squats;
             document.getElementById('jumping_jacks').innerText = data.counts.jumping_jacks;
@@ -84,18 +98,17 @@
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 videoElement.srcObject = stream;
-                // Send a frame to the server for processing every 200ms (5 FPS)
-                setInterval(sendFrame, 200); 
+                setInterval(sendFrame, 200);
             } catch (err) {
-                console.error("Error accessing camera: ", err);
-                alert("Could not access camera. Please grant permission.");
+                console.error("Camera Error:", err);
             }
         }
 
         function sendFrame() {
             context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
             const dataURL = canvas.toDataURL('image/jpeg', 0.7);
-            socket.emit('frame', dataURL);
+            // Send the frame AND the currently selected exercise
+            socket.emit('frame', { image: dataURL, exercise: currentExercise });
         }
 
         setupCamera();
