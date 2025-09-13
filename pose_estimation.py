@@ -31,7 +31,7 @@ def calculate_angle(a, b, c):
     return angle if angle <= 180.0 else 360 - angle
 
 def process_live_frame(frame, exercise_type):
-    """Processes a single frame with improved, more robust exercise logic."""
+    """Processes a single frame with logic adapted from video analysis."""
     image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     image.flags.writeable = False
     results = pose.process(image)
@@ -42,51 +42,36 @@ def process_live_frame(frame, exercise_type):
         landmarks = results.pose_landmarks.landmark
         
         if exercise_type == 'pushups':
+            # --- NEW PUSH-UP LOGIC: Based on vertical position of the nose ---
             shoulder_l = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x, landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
             elbow_l = [landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].x, landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].y]
-            wrist_l = [landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].x, landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].y]
-            shoulder_r = [landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDE.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y]
-            elbow_r = [landmarks[mp_pose.PoseLandmark.RIGHT_ELBOW.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_ELBOW.value].y]
-            wrist_r = [landmarks[mp_pose.PoseLandmark.RIGHT_WRIST.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_WRIST.value].y]
+            nose = [landmarks[mp_pose.PoseLandmark.NOSE.value].x, landmarks[mp_pose.PoseLandmark.NOSE.value].y]
 
-            # Calculate angles for both elbows
-            angle_elbow_l = calculate_angle(shoulder_l, elbow_l, wrist_l)
-            angle_elbow_r = calculate_angle(shoulder_r, elbow_r, wrist_r)
+            # Condition for "up" stage: nose is above the elbow
+            if nose[1] < elbow_l[1]:
+                 exercise_state['pushup_stage'] = "up"
             
-            # --- PUSH-UP LOGIC FIX ---
-            # A repetition is counted when the user goes from "down" to "up".
-            # Stage is set to "down" when arms are bent.
-            if angle_elbow_l < 50 and angle_elbow_r < 50:
+            # Condition for "down" stage + rep count: nose is below elbow, after being in "up" stage
+            if nose[1] > elbow_l[1] and exercise_state['pushup_stage'] == 'up':
                 exercise_state['pushup_stage'] = "down"
-            
-            # Stage is set to "up" and rep is counted when arms are extended *after* being down.
-            if (angle_elbow_l > 160 and angle_elbow_r > 160) and exercise_state['pushup_stage'] == 'down':
-                exercise_state['pushup_stage'] = "up"
                 exercise_state['pushup_counter'] += 1
 
         elif exercise_type == 'squats':
-            hip_r = [landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y]
-            knee_r = [landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].y]
-            ankle_r = [landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].x, landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].y]
+            # --- NEW SQUAT LOGIC: Based on vertical position of hips vs knees ---
             hip_l = [landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x, landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y]
             knee_l = [landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].x, landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].y]
-
-            # Calculate angles for both knees
-            angle_knee_r = calculate_angle(hip_r, knee_r, ankle_r)
-            angle_knee_l = calculate_angle(hip_l, knee_l, ankle_r)
-
-            # --- SQUAT LOGIC FIX ---
-            # A repetition is counted when the user goes from "down" to "up".
-            # Stage is set to "down" when hips are below knees (a deep squat).
-            if (hip_r[1] > knee_r[1] and hip_l[1] > knee_l[1]):
-                exercise_state['squat_stage'] = "down"
             
-            # Stage is set to "up" and rep is counted when standing straight *after* being down.
-            if (angle_knee_r > 160 and angle_knee_l > 160) and exercise_state['squat_stage'] == 'down':
-                exercise_state['squat_stage'] = 'up'
+            # Condition for "up" stage: hips are above the knees
+            if hip_l[1] < knee_l[1]:
+                exercise_state['squat_stage'] = "up"
+            
+            # Condition for "down" stage + rep count: hips are below knees, after being in "up" stage
+            if hip_l[1] > knee_l[1] and exercise_state['squat_stage'] == 'up':
+                exercise_state['squat_stage'] = 'down'
                 exercise_state['squat_counter'] += 1
             
         elif exercise_type == 'jumping_jacks':
+            # This logic is working well, so no changes are needed.
             shoulder_l = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x, landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
             wrist_l = [landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].x, landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].y]
             ankle_l = [landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].x, landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].y]
