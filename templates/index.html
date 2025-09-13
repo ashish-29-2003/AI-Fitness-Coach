@@ -1,21 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>AI Fitness Coach</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Fitness Coach - Home</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #1c1e21;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            text-align: center;
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 90%;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        p {
+            font-size: 1.1em;
+            color: #606770;
+            margin-bottom: 30px;
+        }
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .button {
+            display: block;
+            padding: 15px 20px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        .primary { background-color: #1877f2; }
+        .secondary { background-color: #42b72a; }
+        .tertiary { background-color: #6c757d; }
+        .button:hover {
+            filter: brightness(1.1);
+            transform: translateY(-2px);
+        }
+        input[type="file"] {
+            display: none;
+        }
+        label.button {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+    </style>
 </head>
 <body>
-  <h1>🏋️ AI Fitness Coach</h1>
-  <form action="/upload" method="post" enctype="multipart/form-data">
-    <input type="file" name="video" accept="video/*">
-    <button type="submit">Upload Video</button>
-  </form>
-  <br>
-  <a href="/camera">
-    <button>📷 Start Camera</button>
-  </a>
-  <a href="/history">
-    <button>📜 View Workout History</button>
-  </a>
+    <div class="container">
+        <h1>🏋️ AI Fitness Coach</h1>
+        <p>Your personal AI-powered workout assistant. Analyze your exercises from a video or get real-time feedback using your camera.</p>
+        <div class="actions">
+            <form action="/upload" method="post" enctype="multipart/form-data" id="uploadForm" style="margin:0;">
+                <input type="file" name="video" id="videoUpload" accept="video/*" onchange="document.getElementById('uploadForm').submit();">
+                <label for="videoUpload" class="button primary">
+                    <span>📤 Upload Video</span>
+                </label>
+            </form>
+            <a href="/camera" class="button secondary">📷 Start Live Workout</a>
+            <a href="/history" class="button tertiary">📜 View Workout History</a>
+        </div>
+    </div>
 </body>
 </html>
